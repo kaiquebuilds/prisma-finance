@@ -8,13 +8,16 @@
 
 Prisma is a responsive personal finance management web application for Brazilian users, optimized to reduce financial anxiety by delivering predictable, correct, explainable financial views (cash flow, obligations, budgets, projections). The MVP is **manual input only** (no bank integrations).
 
-Key constraints and decisiondrivers:
+This ADR covers runtime/platform choices. A separate ADR will define security/auth, data model invariants, and calculation engine versioning.
+
+Key constraints and decision drivers:
 
 1. **Correctness & trust:** financial calculations must be consistent, reproducible, and resilient to rounding/locale/time pitfalls.
 2. **Execution speed:** choose a stack that is simple enough to ship and minimize context switching as a solo builder while remaining suited for production environments.
 3. **Fast iteration with low regression risk:** the system must support changing requirements with clear boundaries and testable logic.
 4. **Sandbox mode:** The app requires complex client-side calculations ("What if I spend this?") that must exactly match backend logic.
-5. **Portfolio-grade engineering**: The project must demonstrate strong capability in real-world product development scenarios, from defining product strategy to designing, building, and operating a production system.
+5. **Operate in production**: include observability (errors, logs, basic metrics) and a reproducible deploy pipeline.
+6. **Portfolio-grade engineering**: The project must demonstrate strong capability in real-world product development scenarios, from defining product strategy to designing, building, and operating a production system.
 
 ## 2. Decision
 
@@ -37,7 +40,7 @@ We will use a monorepo structure to house both frontend and backend code, along 
 - For sandbox mode, we need to share calculation logic between frontend and backend for consistency and validation. A monorepo simplifies this sharing.
 - Full-stack features can be developed, tested, and committed together, reducing integration friction.
 
-### 2.3 Frontend: React + Next.js
+### 2.3. Frontend: React + Next.js
 
 We will use React with Next.js for the frontend application.
 
@@ -71,7 +74,7 @@ We will use Vitest for unit testing, Supertest for API testing, and Playwright f
 
 **Rationale:**
 
-- Vitest provides fast, reliable unit testing with excellent Vite integration and TypeScript support.
+- Vitest provides fast TypeScript-native unit testing, especially for packages/core deterministic finance logic.
 - Supertest offers robust API testing capabilities for backend services.
 - Playwright offers robust end-to-end testing capabilities for web applications, simulating interactions in different browsers.
 
@@ -84,22 +87,41 @@ We will use Docker Compose for local development and GitHub Actions for CI/CD.
 - Docker Compose simplifies local environment setup and ensures consistency across development machines.
 - GitHub Actions provides a flexible CI/CD solution that can automate testing and deployment workflows, integrating well with the GitHub ecosystem.
 
-### 2.8. Infrastructure: AWS
+### 2.8. Hosting & Infrastructure: Vercel (Web) + AWS (API + Data)
 
-We will deploy the application on AWS using container-based compute (ECS/Fargate-style runtime), secrets management (AWS Secrets Manager), centralized logging (AWS CloudWatch), and IAM for least-privilege access.
+We will deploy `apps/web` (Next.js) on Vercel. We will deploy `apps/api` (Node.js + Express) on AWS ECS/Fargate behind an Application Load Balancer (ALB). We will use AWS RDS PostgreSQL for persistence.
 
 **Rationale:**
 
-- AWS provides a mature, scalable, and secure cloud platform with a wide range of services that can support the application's needs.
-- Container-based compute allows for easy scaling and management of application instances.
-- AWS Secrets Manager and IAM provide robust security features for managing sensitive information and access control.
-- Centralized logging with CloudWatch enables effective monitoring and troubleshooting of the application.
+- Vercel provides first-class Next.js hosting (SSR/ISR), global delivery, and preview deployments, optimizing iteration speed and UX performance.
+- ECS/Fargate allows us to run a traditional long-lived Express API with full control over runtime behavior while remaining scalable and production-suitable.
+- RDS PostgreSQL provides a managed, reliable relational store aligned with financial correctness needs (ACID, constraints, backups).
+
+### 2.9. Observability: Sentry + CloudWatch
+
+We will use Sentry for application-level error tracking (frontend and backend) and AWS CloudWatch for infrastructure logs and metrics for the API stack (ALB/ECS/RDS).
+
+**Rationale:**
+
+- Sentry provides fast detection of regressions and high-quality debugging signals (stack traces, releases, breadcrumbs).
+- CloudWatch provides centralized logs/metrics/alarms for production operations (availability, latency, saturation).
+
+### 2.10. Blob Storage (Future): Amazon S3 with pre-signed URLs
+
+We will use Amazon S3 for blob storage (future receipt uploads and file exports). The API will issue short-lived pre-signed URLs for client uploads/downloads; the client will not hold storage credentials.
+
+**Rationale:**
+
+- Secure and scalable object storage with mature IAM controls.
+- Pre-signed URL flow reduces API bandwidth and keeps credentials server-side.
 
 ## 3. Alternatives Considered
 
 - **React Single-Page Application (SPA):** Considered but rejected in favor of Next.js for its performance optimizations and server-side rendering capabilities. We can achieve the same SPA-like experience with Next.js while gaining additional benefits.
+- **Use Next Route Handlers instead of Express API:** Rejected to preserve runtime control and a clear API boundary as a portfolio artifact.
 - **Other Frontend Frameworks (Vue, Angular):** Rejected in favor of React due to its maturity, ecosystem, and personal familiarity.
 - **NestJS (or other opinionated frameworks):** Rejected to avoid framework-driven architecture and showcase software design skills.
+- **Host Next.js on AWS (ECS/Fargate/CloudFront):** Rejected for MVP due to increased operational complexity vs Vercel's Next-native hosting and preview deploy workflow.
 - **Other Databases (MySQL, MongoDB):** Rejected in favor of PostgreSQL due to its strong ACID compliance and relational model, which are critical for financial data integrity.
 - **Other Cloud Providers (GCP, Azure):** Rejected in favor of AWS due to its maturity, service offerings, and personal familiarity.
 - **Other Testing Frameworks (Jest, Mocha):** Rejected in favor of Vitest due to its speed and Vite integration.
@@ -128,6 +150,8 @@ We will deploy the application on AWS using container-based compute (ECS/Fargate
 - Flexibility to adapt and evolve the architecture as needed.
 - Strong foundation for future growth and complexity.
 - Reduced context switching for the solo developer.
+- Strong operational story via CloudWatch alarms + Sentry for regression detection.
+- Clear separation: Next.js web surface + independently scalable API service.
 
 ### 4.2. Negative
 
@@ -135,4 +159,4 @@ We will deploy the application on AWS using container-based compute (ECS/Fargate
 - Express lack of built-in structure may lead to inconsistent code organization. Mitigation: enforce architecture through layering and boundaries.
 - Possible overengineering for a solo developer context. Mitigation: adopt an emergent and iterative approach to architecture.
 - Maintenance overhead of multiple technologies and tools. Mitigation: prioritize simplicity and only adopt tools that provide clear value.
-- Dependence on AWS services may lead to vendor lock-in. Mitigation: design the architecture to be as cloud-agnostic as possible.
+- Hybrid hosting complexity (Vercel + AWS) increases configuration surface (env vars, CORS, cookies, domains). Mitigation: document env management, enforce consistent domains, add a runbook.
