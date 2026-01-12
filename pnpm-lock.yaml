@@ -11,6 +11,9 @@ importers:
       '@nx/eslint-plugin':
         specifier: 22.3.3
         version: 22.3.3(@babel/traverse@7.28.6)(@typescript-eslint/parser@8.53.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.2(jiti@2.6.1))(nx@22.3.3)(typescript@5.9.3)
+      '@nx/js':
+        specifier: ^22.3.3
+        version: 22.3.3(@babel/traverse@7.28.6)(nx@22.3.3)
       nx:
         specifier: 22.3.3
         version: 22.3.3

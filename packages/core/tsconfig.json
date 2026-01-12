@@ -1,4 +1,10 @@
 {
-  "include": ["src/*"],
-  "exclude": ["dist/*"]
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
 }

@@ -1,4 +1,13 @@
 {
-  "include": ["src/*"],
-  "exclude": ["dist/*"]
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/app"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"],
+  "references": [
+    {
+      "path": "../../packages/core/tsconfig.lib.json"
+    }
+  ]
 }
