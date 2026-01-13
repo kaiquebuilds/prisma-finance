@@ -10,6 +10,7 @@
     "@nx/esbuild": "^22.3.3",
     "@nx/eslint-plugin": "22.3.3",
     "@nx/js": "^22.3.3",
+    "@nx/playwright": "^22.3.3",
     "nx": "22.3.3"
   }
 }
