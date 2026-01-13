@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import { sayHello } from ".";
+import { sayHello } from "@/index";
 
-test("sayHello() has 'hello' in it", () => {
+test("sayHello() has 'Hello' in it", () => {
   expect(sayHello()).toContain("Hello");
 });

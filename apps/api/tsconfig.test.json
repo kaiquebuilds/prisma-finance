@@ -7,7 +7,7 @@
   "include": ["vitest.config.ts", "src/**/*.{spec|test}.ts"],
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "./tsconfig.app.json"
     }
   ]
 }
