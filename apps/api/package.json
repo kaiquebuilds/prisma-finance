@@ -1,10 +1,12 @@
 {
   "name": "@prisma-finance/api",
   "version": "0.1.0",
-  "main": "apps/api/src/main.ts",
+  "main": "apps/api/src/index.ts",
   "author": "Kaique Borges <rique.kaique@gmail.com>",
   "scripts": {
-    "dev": "tsx src/main.ts"
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "nx": {
     "tags": [
@@ -17,7 +19,9 @@
     "eslint": "^9.39.2",
     "prettier": "^3.7.4",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vite-tsconfig-paths": "^6.0.4",
+    "vitest": "^4.0.17"
   },
   "dependencies": {
     "@prisma-finance/core": "workspace:^",
