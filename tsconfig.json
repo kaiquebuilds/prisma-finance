@@ -1,0 +1,21 @@
+{
+  "extends": ["./tsconfig.base.json"],
+  "compilerOptions": {
+    "strict": true
+  },
+  "files": [],
+  "references": [
+    {
+      "path": "./packages/core"
+    },
+    {
+      "path": "./apps/api"
+    },
+    {
+      "path": "./apps/web"
+    },
+    {
+      "path": "./apps/web-e2e"
+    }
+  ]
+}
