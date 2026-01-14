@@ -3,8 +3,10 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+    env_file: apps/web/.env.docker
     ports:
-      - 3000:3000
+      - "${WEB_PORT:-3000}:3000"
+
   api:
     build:
       context: .
