@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "private": true,
   "main": "src/index.ts",
+  "type": "module",
   "scripts": {
     "build": "tsdown",
     "test": "vitest run",
