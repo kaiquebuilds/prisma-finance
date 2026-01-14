@@ -9,6 +9,7 @@ if (output.error) {
 
 const envSchema = z.object({
   PORT: z.coerce.number().default(3333),
+  DATABASE_URL: z.string(),
 });
 
 const validationResult = envSchema.safeParse(output.parsed);
