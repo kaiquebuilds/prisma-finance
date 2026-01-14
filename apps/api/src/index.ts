@@ -12,11 +12,19 @@ export function foo() {
   return "bar";
 }
 
-app.get("/", (_, res: Response) => {
+const v1 = express.Router();
+
+v1.get("/health", (_, res: Response) => {
+  res.json({ message: "Healthy" });
+});
+
+v1.get("/", (_, res: Response) => {
   res.json({
-    message: sayHello(),
+    message: sayHello() + " from server",
   });
 });
+
+app.use("/v1", v1);
 
 const port = env.PORT;
 
