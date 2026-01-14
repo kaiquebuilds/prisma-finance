@@ -8,7 +8,8 @@
     "dev": "tsx watch --tsconfig=tsconfig.app.json src/index.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "build": "tsc --noEmit -p tsconfig.app.json && tsup"
   },
   "nx": {
     "targets": {
@@ -45,6 +46,7 @@
     "prettier": "^3.7.4",
     "prisma": "^7.2.0",
     "tsconfig-paths": "^4.2.0",
+    "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vite-tsconfig-paths": "^6.0.4",
