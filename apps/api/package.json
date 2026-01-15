@@ -9,7 +9,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "start": "node dist/index.js",
-    "build": "tsc --noEmit -p tsconfig.app.json && tsup"
+    "prebuild": "tsc --noEmit -p tsconfig.app.json",
+    "build": "tsup",
+    "lint": "eslint -c eslint.config.mjs"
   },
   "nx": {
     "targets": {
@@ -43,7 +45,6 @@
     "@types/node": "^20.19.28",
     "@types/pg": "^8.16.0",
     "eslint": "^9.39.2",
-    "prettier": "^3.7.4",
     "tsconfig-paths": "^4.2.0",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",

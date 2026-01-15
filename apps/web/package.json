@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "tsc --noEmit -p tsconfig.app.json",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint -c eslint.config.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -35,6 +36,7 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite-tsconfig-paths": "^6.0.4",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.17",
+    "vitest-fetch-mock": "^0.4.5"
   }
 }
