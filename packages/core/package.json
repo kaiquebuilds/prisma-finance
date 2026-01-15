@@ -6,10 +6,11 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
+    "prebuild": "tsc --noEmit -p tsconfig.lib.json",
     "build": "tsdown",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint"
+    "lint": "eslint -c eslint.config.mjs"
   },
   "nx": {
     "tags": [

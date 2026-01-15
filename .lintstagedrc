@@ -1,7 +1,7 @@
 {
-  "*.{ts,tsx}": ["pnpm nx affected --target=typecheck"],
-  "*.{ts,tsx,js}": [
-    "pnpm nx affected:lint --fix --uncommitted",
-    "pnpm nx format:write --uncommited"
+  "*.{ts,tsx}": ["node scripts/lint-staged-typecheck.mjs"],
+  "*.{ts,tsx,js,jsx}": [
+    "node scripts/lint-staged-lint.mjs",
+    "node scripts/lint-staged-format.mjs"
   ]
 }

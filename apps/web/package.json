@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "tsc --noEmit -p tsconfig.app.json",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint -c eslint.config.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },
