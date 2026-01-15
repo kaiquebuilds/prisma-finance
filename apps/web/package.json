@@ -36,6 +36,7 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite-tsconfig-paths": "^6.0.4",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.17",
+    "vitest-fetch-mock": "^0.4.5"
   }
 }
