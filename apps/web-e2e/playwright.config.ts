@@ -1,4 +1,3 @@
-import { workspaceRoot } from "@nx/devkit";
 import { defineConfig, devices } from "@playwright/test";
 import { nxE2EPreset } from "@nx/playwright/preset";
 
@@ -60,11 +59,4 @@ export default defineConfig({
       use: { ...devices["iPhone 12"] },
     },
   ],
-
-  webServer: {
-    command: "pnpm nx run web:dev",
-    url: "http://localhost:3000",
-    reuseExistingServer: !process.env.CI,
-    cwd: workspaceRoot,
-  },
 });
