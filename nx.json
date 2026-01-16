@@ -1,43 +1,23 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "workspaceLayout": {
-    "appsDir": "apps",
-    "libsDir": "packages"
-  },
+  "workspaceLayout": { "appsDir": "apps", "libsDir": "packages" },
   "targetDefaults": {
     "build": {
       "dependsOn": ["^build", "typecheck"],
       "cache": true,
       "outputs": ["{projectRoot}/.next", "{projectRoot}/dist"]
     },
-    "test": {
-      "cache": true
-    },
-    "test:watch": {
-      "cache": true
-    },
-    "lint": {
-      "cache": true
-    },
-    "start": {
-      "cache": true,
-      "dependsOn": ["build"]
-    }
+    "test": { "cache": true },
+    "test:watch": { "cache": true },
+    "lint": { "cache": true },
+    "start": { "cache": true, "dependsOn": ["build"] }
   },
   "plugins": [
     {
       "plugin": "@nx/js/typescript",
-      "options": {
-        "typecheck": {
-          "targetName": "typecheck"
-        }
-      }
+      "options": { "typecheck": { "targetName": "typecheck" } }
     },
-    {
-      "plugin": "@nx/playwright/plugin",
-      "options": {
-        "targetName": "e2e"
-      }
-    }
-  ]
+    { "plugin": "@nx/playwright/plugin", "options": { "targetName": "e2e" } }
+  ],
+  "nxCloudId": "696a0b8fa5a1fa5013d774e5"
 }
