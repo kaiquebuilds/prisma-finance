@@ -13,7 +13,7 @@ COPY tsconfig.json ./
 COPY apps/web/package.json ./apps/web/
 
 # Copy all package.json files that are depended upon for nx build to work correctly
-COPY --parents packages/**/package.json .
+COPY packages/core/package.json ./packages/core/
 
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/.pnpm-store \
     pnpm config set store-dir /pnpm/.pnpm-store && \

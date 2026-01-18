@@ -11,7 +11,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json tsconfig.base.json 
 COPY apps/api/package.json ./apps/api/package.json
 
 # Copy all package.json files that are depended upon for nx build to work correctly
-COPY --parents packages/**/package.json .
+COPY packages/core/package.json ./packages/core/
 
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/.pnpm-store \
     pnpm config set store-dir /pnpm/.pnpm-store && \
@@ -36,5 +36,7 @@ ENV NODE_ENV=production
 COPY --from=builder --chown=node:node /out ./
 
 EXPOSE 3333
+
+USER node
 
 CMD ["node", "dist/index.js"]
