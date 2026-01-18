@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y openssl
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json tsconfig.base.json tsconfig.json ./
 COPY apps/api/package.json ./apps/api/package.json
 
-# Copy all dependent package.json files for pnpm to work correctly
+# Copy all package.json files that are depended upon for nx build to work correctly
 COPY --parents packages/**/package.json .
 
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/.pnpm-store \
