@@ -1,8 +1,19 @@
 import { sayHello } from "@prisma-finance/core";
-import express, { Application, Response } from "express";
+import express, { Application, Response, Request } from "express";
 import { prisma } from "./lib/prisma";
+import { errorHandler } from "./middleware/errorHandler";
+import cors from "cors";
+import { env } from "./env";
 
 const app: Application = express();
+
+app.use(
+  cors({
+    origin: env.CORS_ORIGIN,
+  }),
+);
+
+app.use(express.json());
 
 export function foo() {
   return "bar";
@@ -14,8 +25,10 @@ app.get("/health", (_, res: Response) => {
   res.json({ message: "Healthy" });
 });
 
-v1.get("/", async (_, res: Response) => {
+v1.get("/", async (req: Request, res: Response) => {
   const message = `${sayHello()} (from server)`;
+
+  console.log(req.headers);
 
   const user = await prisma.user.findFirst({
     where: {
@@ -35,6 +48,8 @@ v1.get("/", async (_, res: Response) => {
     message: `${message}. Welcome, ${user.name}.`,
   });
 });
+
+app.use(errorHandler);
 
 app.use("/v1", v1);
 

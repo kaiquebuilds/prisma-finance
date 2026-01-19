@@ -1,11 +1,7 @@
 import { env } from "./env";
-import cors from "cors";
 
 import { app } from "./app";
 import { prisma } from "./lib/prisma";
-
-// TODO: Only allow localhost and frontend origins
-app.use(cors());
 
 const port = env.PORT;
 
