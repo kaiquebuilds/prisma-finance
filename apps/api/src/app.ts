@@ -1,56 +1,43 @@
 import { sayHello } from "@prisma-finance/core";
-import express, { Application, Response, Request } from "express";
-import { prisma } from "./lib/prisma";
-import { errorHandler } from "./middleware/errorHandler";
-import cors from "cors";
-import { env } from "./env";
+import express, { Response, Request, Express } from "express";
+import { PrismaClient } from "./generated/prisma/client";
 
-const app: Application = express();
+export function createApp(): Express {
+  const app = express();
+  return app;
+}
 
-app.use(
-  cors({
-    origin: env.CORS_ORIGIN,
-  }),
-);
+export function registerRoutes(app: Express, prisma: PrismaClient): void {
+  const v1 = express.Router();
 
-app.use(express.json());
+  v1.get("/", async (req: Request, res: Response) => {
+    const message = `${sayHello()} (from server)`;
+
+    const user = await prisma.user.findFirst({
+      where: {
+        name: {
+          contains: "Alex",
+        },
+      },
+    });
+
+    if (!user) {
+      return res.json({
+        message,
+      });
+    }
+
+    res.json({
+      message: `${message}. Welcome, ${user.name}.`,
+    });
+  });
+
+  app.use("/v1", v1);
+  app.get("/health", (_req, res: Response) => {
+    res.json({ message: "OK" });
+  });
+}
 
 export function foo() {
   return "bar";
 }
-
-const v1 = express.Router();
-
-app.get("/health", (_, res: Response) => {
-  res.json({ message: "Healthy" });
-});
-
-v1.get("/", async (req: Request, res: Response) => {
-  const message = `${sayHello()} (from server)`;
-
-  console.log(req.headers);
-
-  const user = await prisma.user.findFirst({
-    where: {
-      name: {
-        contains: "Alex",
-      },
-    },
-  });
-
-  if (!user) {
-    return res.json({
-      message,
-    });
-  }
-
-  res.json({
-    message: `${message}. Welcome, ${user.name}.`,
-  });
-});
-
-app.use(errorHandler);
-
-app.use("/v1", v1);
-
-export { app };
