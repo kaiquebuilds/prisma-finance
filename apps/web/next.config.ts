@@ -5,6 +5,9 @@ const output =
 
 const nextConfig: NextConfig = {
   output,
+  typescript: {
+    tsconfigPath: "tsconfig.app.json",
+  },
 };
 
 export default nextConfig;
