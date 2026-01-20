@@ -2,13 +2,13 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./out-tsc/spec",
-    "types": ["node", "vitest"],
+    "types": ["node"],
     "baseUrl": "./",
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "include": ["vitest.config.ts", "src/**/*.{spec,test}.ts"],
+  "include": ["vitest.config.ts", "src/**/*.ts"],
   "references": [
     {
       "path": "./tsconfig.app.json"

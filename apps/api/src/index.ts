@@ -1,18 +1,31 @@
 import { env } from "./env";
-import cors from "cors";
-
-import { app } from "./app";
+import { createApp, registerRoutes } from "./app";
 import { prisma } from "./lib/prisma";
-
-// TODO: Only allow localhost and frontend origins
-app.use(cors());
+import cors from "cors";
+import express from "express";
 
 const port = env.PORT;
+const app = createApp();
 
-await prisma.$connect();
+app.use(
+  cors({
+    origin: env.CORS_ORIGIN,
+  }),
+);
+app.use(express.json());
 
-const server = app.listen(port, () => {
+registerRoutes(app, prisma);
+
+const server = app.listen(port, async () => {
   console.log(`Server listening at port ${port}...`);
+  await prisma
+    .$connect()
+    .then(() => {
+      console.log("Connected to the database.");
+    })
+    .catch((err) => {
+      console.error("Failed to connect to the database:", err);
+    });
 });
 
 server.on("error", (err) => {
