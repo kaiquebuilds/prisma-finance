@@ -31,7 +31,7 @@ Prisma is a personal finance management application handling sensitive financial
 
 ## 2.1. Cloudflare as Security Perimeter
 
-We will use Cloudflare as the primary security layer for both staging and production environments, providing WAF, rate limiting, SSL/TLS, and DDoS protection.
+We will use Cloudflare as the primary security layer for both staging and production environments, providing WAF, SSL/TLS, and DDoS protection.
 
 **Rationale:**
 
@@ -54,19 +54,11 @@ We will use Cloudflare as the primary security layer for both staging and produc
 - Public access with comprehensive protection
 - LGPD compliance framework
 
-## 2.3. Adaptive Rate Limiting
+## 2.3. Rate Limiting in Express
 
-Rate limiting will follow an adaptive approach:
+Rate limiting will be implemented in Express API to mitigate brute force and abuse attempts, with different thresholds based on endpoint sensitivity.
 
-- Start with generous limits prioritizing usability
-- Monitor usage patterns aggressively
-- Adjust thresholds based on real traffic data
-
-**Initial Production Limits:**
-
-- Login endpoints: 10 attempts/minute per IP
-- API endpoints: 200 requests/minute per IP
-- Financial calculations: 50 requests/minute per user
+We choose Express in favor of Cloudflare's rate limiting due to it being a paid feature.
 
 ## 2.4. Tiered Monitoring Strategy
 
@@ -85,7 +77,7 @@ Rate limiting will follow an adaptive approach:
 
 ## 3.1. Self-Implemented Security
 
-- **Considered:** Custom rate limiting, IP restrictions, and WAF in Express/Node.js
+- **Considered:** Custom WAF in Express/Node.js
 - **Rejected:** Would require significant development time and maintenance burden for a solo developer, increasing risk of security gaps
 
 ## 3.2. AWS Shield/CloudFront
