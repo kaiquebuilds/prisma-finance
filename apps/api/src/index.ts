@@ -9,6 +9,7 @@ import { errorHandler } from "./middleware/errorHandler";
 import { morganMiddleware } from "./middleware/morgan";
 import logger from "./lib/logger";
 import * as Sentry from "@sentry/node";
+import { apiAuthMiddleware } from "./middleware/apiAuthMiddleware";
 
 const port = env.PORT;
 const app = createApp();
@@ -31,6 +32,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morganMiddleware);
+app.use(apiAuthMiddleware);
 
 registerRoutes(app, prisma);
 
