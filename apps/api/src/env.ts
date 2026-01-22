@@ -13,6 +13,9 @@ const envSchema = z.object({
   CORS_ORIGIN: z.url().default("http://localhost:3000"),
   SENTRY_DSN: z.url(),
   API_KEY: z.string().min(1),
+  API_ENV: z
+    .enum(["development", "staging", "production"])
+    .default("production"),
 });
 
 const isDocker = process.env.DOCKER === "true";
