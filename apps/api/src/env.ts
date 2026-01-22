@@ -1,13 +1,17 @@
+/* eslint-disable no-console */
 import dotenv from "dotenv";
 import { z } from "zod";
 
-const dotenvResult = dotenv.config();
+const dotenvResult = dotenv.config({
+  quiet: true,
+});
 
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("production"),
   PORT: z.coerce.number().default(3333),
   DATABASE_URL: z.string(),
   CORS_ORIGIN: z.url().default("http://localhost:3000"),
+  SENTRY_DSN: z.url(),
 });
 
 const isDocker = process.env.DOCKER === "true";
