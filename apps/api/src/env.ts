@@ -1,6 +1,6 @@
-/* eslint-disable no-console */
 import dotenv from "dotenv";
 import { z } from "zod";
+import logger from "./lib/logger";
 
 const dotenvResult = dotenv.config({
   quiet: true,
@@ -26,7 +26,7 @@ if (!isDocker && !isProduction && !isTest) {
 
   const fileValidationResult = envSchema.safeParse(dotenvResult.parsed);
   if (fileValidationResult.error) {
-    console.error(
+    logger.error(
       "Invalid environment variables in .env: ",
       z.treeifyError(fileValidationResult.error).properties,
     );
@@ -37,7 +37,7 @@ if (!isDocker && !isProduction && !isTest) {
 const processEnvValidationResult = envSchema.safeParse(process.env);
 
 if (processEnvValidationResult.error) {
-  console.error(
+  logger.error(
     "Invalid environment variables in process.env: ",
     z.treeifyError(processEnvValidationResult.error).properties,
   );
