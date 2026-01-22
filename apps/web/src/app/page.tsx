@@ -1,6 +1,8 @@
 import { fetchApiFromServer } from "@/lib/api/server";
 import Image from "next/image";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const { message } = await fetchApiFromServer("/v1").then((r) => r.json());
 
