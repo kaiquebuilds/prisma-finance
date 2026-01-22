@@ -1,12 +1,46 @@
+"use client";
+
 import Image from "next/image";
-import { fetchApiFromServer } from "@/lib/api/server";
+import posthog from "posthog-js";
+import { useEffect, useState } from "react";
 
-export const dynamic = "force-dynamic";
+export default function Home() {
+  const [message, setMessage] = useState<string>("");
 
-export default async function Home() {
-  const { message } = await fetchApiFromServer("/v1/")
-    .then((r) => r.json())
-    .catch((e) => console.error(e));
+  useEffect(() => {
+    fetch("/api/proxy/v1/")
+      .then((r) => r.json())
+      .then((data) => setMessage(data.message))
+      .catch((e) => console.error(e));
+  }, []);
+
+  const handleDeployNowClick = () => {
+    posthog.capture("clicked_deploy_now", {
+      destination_url:
+        "https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app",
+    });
+  };
+
+  const handleDocumentationClick = () => {
+    posthog.capture("clicked_documentation", {
+      destination_url:
+        "https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app",
+    });
+  };
+
+  const handleTemplatesClick = () => {
+    posthog.capture("clicked_templates_link", {
+      destination_url:
+        "https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app",
+    });
+  };
+
+  const handleLearningClick = () => {
+    posthog.capture("clicked_learning_link", {
+      destination_url:
+        "https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app",
+    });
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
@@ -28,6 +62,7 @@ export default async function Home() {
             <a
               href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
               className="font-medium text-zinc-950 dark:text-zinc-50"
+              onClick={handleTemplatesClick}
             >
               Templates
             </a>{" "}
@@ -35,6 +70,7 @@ export default async function Home() {
             <a
               href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
               className="font-medium text-zinc-950 dark:text-zinc-50"
+              onClick={handleLearningClick}
             >
               Learning
             </a>{" "}
@@ -47,6 +83,7 @@ export default async function Home() {
             href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={handleDeployNowClick}
           >
             <Image
               className="dark:invert"
@@ -62,6 +99,7 @@ export default async function Home() {
             href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={handleDocumentationClick}
           >
             Documentation
           </a>
