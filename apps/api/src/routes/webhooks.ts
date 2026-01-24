@@ -3,19 +3,19 @@ import { Webhook } from "svix";
 import { prisma } from "@/lib/prisma";
 import { env } from "@/env";
 import logger from "@/lib/logger";
+import { clerkClient } from "@clerk/express";
 
 const router: Router = express.Router();
 const webhookSecret = env.CLERK_WEBHOOK_SECRET;
 
 router.post("/clerk", async (req: Request, res: Response) => {
   try {
-    const payload = req.body as Buffer;
+    const payload = req.body;
     const headers = req.headers as Record<string, string | string[]>;
 
     const wh = new Webhook(webhookSecret);
     const evt = wh.verify(payload, headers as Record<string, string>);
 
-    // Type the event
     const event = evt as {
       type: string;
       data: {
@@ -45,6 +45,9 @@ router.post("/clerk", async (req: Request, res: Response) => {
       });
 
       if (existingByClerkId) {
+        await clerkClient.users.updateUser(clerkId, {
+          externalId: existingByClerkId.id,
+        });
         return res.status(200).json({ success: true, user: existingByClerkId });
       }
 
@@ -52,21 +55,25 @@ router.post("/clerk", async (req: Request, res: Response) => {
         where: { email },
       });
 
+      let user;
       if (existingByEmail) {
         // Email collision: attach clerkId to existing user
-        const updated = await prisma.user.update({
+        user = await prisma.user.update({
           where: { email },
           data: { clerkId },
         });
-        return res.status(200).json({ success: true, user: updated });
+      } else {
+        user = await prisma.user.create({
+          data: {
+            clerkId,
+            email,
+            name,
+          },
+        });
       }
 
-      const user = await prisma.user.create({
-        data: {
-          clerkId,
-          email,
-          name,
-        },
+      await clerkClient.users.updateUser(clerkId, {
+        externalId: user.id,
       });
 
       return res.status(200).json({ success: true, user });

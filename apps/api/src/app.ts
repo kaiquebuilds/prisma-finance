@@ -1,8 +1,8 @@
 import { sayHello } from "@prisma-finance/core";
 import express, { Response, Request, Express } from "express";
 import { PrismaClient } from "./generated/prisma/client";
-import { getAuth } from "@clerk/express";
 import { protectedRoute } from "./middleware/protectedRoute";
+import { getAuth } from "@clerk/express";
 
 export function createApp(): Express {
   const app = express();
@@ -35,16 +35,16 @@ export function registerRoutes(app: Express, prisma: PrismaClient): void {
   });
 
   v1.get("/users/me", async (req: Request, res: Response) => {
-    const { userId } = getAuth(req);
+    const id = getAuth(req).sessionClaims.prismaUserId as string;
 
     const user = await prisma.user.findUnique({
       where: {
-        clerkId: userId,
+        id,
       },
     });
 
     if (!user) {
-      return res.status(404).json({ message: "User profile not ready yet" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     return res.json({ data: user });

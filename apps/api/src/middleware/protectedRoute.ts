@@ -1,7 +1,7 @@
 import { getAuth } from "@clerk/express";
 import { NextFunction, Request, Response } from "express";
 
-export function protectedRoute(
+export async function protectedRoute(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -9,9 +9,7 @@ export function protectedRoute(
   const { isAuthenticated } = getAuth(req);
 
   if (!isAuthenticated) {
-    return res.status(401).json({
-      error: "User not authenticated",
-    });
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   next();
