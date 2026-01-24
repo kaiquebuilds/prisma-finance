@@ -42,7 +42,6 @@ app.get("/health", (_req, res: Response) => {
 app.use("/webhooks", express.raw({ type: "application/json" }), webhookRouter);
 
 app.use(clerkMiddleware());
-// app.use(apiAuthMiddleware);
 app.use(express.json());
 
 registerRoutes(app, prisma);
