@@ -1,13 +1,10 @@
 import type { NextConfig } from "next";
-import nextMdx from "@next/mdx";
+import nextMDX from "@next/mdx";
 
 const nextConfig: NextConfig = {
-  typescript: {
-    tsconfigPath: "tsconfig.app.json",
-  },
   pageExtensions: ["tsx", "mdx"],
 };
 
-const withMdx = nextMdx();
+const withMdx = nextMDX();
 
 export default withMdx(nextConfig);
