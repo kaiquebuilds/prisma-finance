@@ -25,6 +25,7 @@ const limiter = rateLimit({
     "We're receiving a lot of requests right now. Please try again in a few seconds.",
 });
 
+app.set("trust proxy", true);
 app.use(limiter);
 app.use(
   cors({
