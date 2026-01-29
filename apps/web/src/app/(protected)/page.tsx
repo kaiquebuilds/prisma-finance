@@ -1,5 +1,5 @@
 import { fetchApiFromServer } from "@/lib/api/server";
-import { UserNotFound } from "@/ui/UserNotFound";
+import { UserNotFound } from "@/components/UserNotFound";
 
 export const dynamic = "force-dynamic";
 
