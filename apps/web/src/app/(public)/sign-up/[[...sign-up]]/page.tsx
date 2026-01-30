@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useSignUp } from "@clerk/nextjs";
 import { GalleryVerticalEnd } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -96,17 +97,14 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="bg-[url('/bg-pattern.svg')] bg-no-repeat bg-top flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
-      <div className="w-full container-padding-desktop">
+    <div className="bg-[url('/bg-pattern.svg')] dark:bg-[url('/bg-pattern-dark.svg')] bg-no-repeat bg-position-[center_top] bg-size-[500px] sm:bg-size-[768px] sm:bg-position-[50%_-30%] flex min-h-svh flex-col items-center justify-center gap-6 p-4 md:p-8">
+      <div className="w-full max-w-88">
         <div className="flex flex-col gap-8">
           <form>
-            <FieldGroup>
+            <FieldGroup className="flex flex-col gap-8">
               <div className="flex flex-col items-center gap-2 text-center">
-                <a
-                  href="#"
-                  className="flex flex-col items-center gap-2 font-medium"
-                >
-                  <div className="flex size-8 items-center justify-center rounded-md">
+                <a href="https://prismafinance.app">
+                  <div className="flex size-6 items-center justify-center mb-6">
                     <svg
                       height="30"
                       viewBox="0 0 18 18"
@@ -121,52 +119,93 @@ export default function SignUpPage() {
                   </div>
                   <span className="sr-only">Prisma</span>
                 </a>
-                <h1 className="text-display-2xl p-sm font-bold font-display">
+                <h1 className="text-display-xs font-semibold sm:text-display-sm font-display">
                   Bem-vindo(a) ao Prisma
                 </h1>
-                <FieldDescription>
-                  Crie sua conta e comece a retomar o controle das suas
-                  finanças.
-                </FieldDescription>
+                <p className="text-md text-text-tertiaty">
+                  Crie sua conta e comece a gerenciar suas finanças.
+                </p>
               </div>
-              <Field>
-                <FieldLabel htmlFor="name">Nome</FieldLabel>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Digite seu nome"
-                  required
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@exemplo.com"
-                  required
-                />
-              </Field>
-              <Field>
-                <Button type="submit">Criar conta</Button>
-              </Field>
-              <FieldSeparator>Ou</FieldSeparator>
-              <Field>
-                <Button variant="outline" type="button">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path
-                      d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
-                      fill="currentColor"
+              <div className="flex flex-col gap-5">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Field>
+                    <FieldLabel htmlFor="name">Nome</FieldLabel>
+                    <Input
+                      id="name"
+                      type="text"
+                      placeholder="Seu nome"
+                      required
                     />
-                  </svg>
-                  Entrar com Google
-                </Button>
-              </Field>
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="last-name">Sobrenome</FieldLabel>
+                    <Input
+                      id="last-name"
+                      type="text"
+                      placeholder="Seu sobrenome"
+                      required
+                    />
+                  </Field>
+                </div>
+                <Field>
+                  <FieldLabel htmlFor="email">Email</FieldLabel>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="m@exemplo.com"
+                    required
+                  />
+                </Field>
+                <div className="flex flex-col gap-4 mt-1">
+                  <Field>
+                    <Button type="submit">Criar conta</Button>
+                  </Field>
+                  <Field>
+                    <Button
+                      className="bg-bg-primary text-text-secondary gap-3 hover:bg-bg-primary-hover shadow-xs-skeumorphic-with-border"
+                      type="button"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        <g clipPath="url(#clip0_19850_357231)">
+                          <path
+                            d="M23.7663 12.2765C23.7663 11.4608 23.7001 10.6406 23.559 9.83813H12.2402V14.4591H18.722C18.453 15.9495 17.5888 17.2679 16.3233 18.1056V21.104H20.1903C22.4611 19.014 23.7663 15.9274 23.7663 12.2765Z"
+                            fill="#4285F4"
+                          />
+                          <path
+                            d="M12.2401 24.0008C15.4766 24.0008 18.2059 22.9382 20.1945 21.1039L16.3276 18.1055C15.2517 18.8375 13.8627 19.252 12.2445 19.252C9.11388 19.252 6.45946 17.1399 5.50705 14.3003H1.5166V17.3912C3.55371 21.4434 7.7029 24.0008 12.2401 24.0008V24.0008Z"
+                            fill="#34A853"
+                          />
+                          <path
+                            d="M5.50277 14.3002C5.00011 12.8099 5.00011 11.196 5.50277 9.70569V6.61475H1.51674C-0.185266 10.0055 -0.185266 14.0004 1.51674 17.3912L5.50277 14.3002V14.3002Z"
+                            fill="#FBBC04"
+                          />
+                          <path
+                            d="M12.2401 4.74966C13.9509 4.7232 15.6044 5.36697 16.8434 6.54867L20.2695 3.12262C18.1001 1.0855 15.2208 -0.034466 12.2401 0.000808666C7.7029 0.000808666 3.55371 2.55822 1.5166 6.61481L5.50264 9.70575C6.45065 6.86173 9.10947 4.74966 12.2401 4.74966V4.74966Z"
+                            fill="#EA4335"
+                          />
+                        </g>
+                        <defs>
+                          <clipPath id="clip0_19850_357231">
+                            <rect width="24" height="24" fill="white" />
+                          </clipPath>
+                        </defs>
+                      </svg>
+                      Continuar com Google
+                    </Button>
+                  </Field>
+                </div>
+              </div>
             </FieldGroup>
           </form>
-          <FieldDescription className="px-6 text-center">
-            Já possui uma conta? <a href="/sign-in">Entre em sua conta</a>
-          </FieldDescription>
+          <p className="text-center text-text-tertiaty text-sm">
+            Já possui uma conta? <Link href="/sign-in">Entre em sua conta</Link>
+          </p>
         </div>
       </div>
     </div>
