@@ -14,6 +14,10 @@ export function registerRoutes(app: Express, prisma: PrismaClient): void {
   v1.get("/users/me", async (req: Request, res: Response) => {
     const id = getAuth(req).sessionClaims.prismaUserId as string;
 
+    if (!id) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
     const user = await prisma.user.findUnique({
       where: {
         id,

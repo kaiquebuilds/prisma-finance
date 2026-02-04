@@ -25,7 +25,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider localization={ptBR} signUpUrl="/sign-up">
+    <ClerkProvider
+      localization={ptBR}
+      signUpUrl="/sign-up"
+      taskUrls={{
+        "reset-password": "/session-tasks/reset-password",
+      }}
+    >
       <html lang="en">
         <body className={`${figtree.variable} ${roboto.variable} antialiased`}>
           {children}

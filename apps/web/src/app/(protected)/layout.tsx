@@ -1,5 +1,6 @@
 import {
   RedirectToSignIn,
+  RedirectToTasks,
   SignedIn,
   SignedOut,
   UserButton,
@@ -17,6 +18,7 @@ export default function RootProtectedLayout({
         {children}
       </SignedIn>
       <SignedOut>
+        <RedirectToTasks />
         <RedirectToSignIn />
       </SignedOut>
     </>
