@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { useSignUp } from "@clerk/nextjs";
 import Link from "next/link";
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,85 +24,7 @@ import {
 import { FeaturedIcon } from "@/components/ui/featured-icon";
 import Mail from "@/icons/mail-01.svg";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
-
-const termsAndPrivacySchema = z.boolean().refine((value) => value, {
-  error:
-    "Para criar uma conta, você precisa ler e aceitar os Termos de Uso e a Política de Privacidade.",
-});
-
-const legalFormSchema = z.object({
-  termsAndPrivacy: termsAndPrivacySchema,
-});
-
-const signUpFormSchema = z.object({
-  firstName: z.string().min(1, { error: "Por favor, insira seu nome" }),
-  lastName: z.string().min(1, { error: "Por favor, insira seu sobrenome" }),
-  email: z.email({ error: "Endereço de email inválido" }),
-  termsAndPrivacy: termsAndPrivacySchema,
-  password: z
-    .string()
-    .min(8, { error: "Sua senha deve ter 8 ou mais caracteres" }),
-});
-
-const verifyCodeFormSchema = z.object({
-  code: z.string().min(6),
-});
-
-type ResendCodeButtonProps = {
-  onClick: () => void;
-};
-
-const INITIAL_TIMER_VALUE = 30;
-
-function ResendCodeButton({ onClick }: ResendCodeButtonProps) {
-  const [secondsRemaining, setSecondsRemaining] = useState(INITIAL_TIMER_VALUE);
-  const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
-  const isIntervalActive = secondsRemaining > 0;
-
-  function createInterval() {
-    if (intervalIdRef.current !== null) return;
-
-    intervalIdRef.current = setInterval(() => {
-      setSecondsRemaining((curr) => {
-        if (curr > 1) {
-          return curr - 1;
-        }
-        if (intervalIdRef.current) {
-          clearInterval(intervalIdRef.current);
-          intervalIdRef.current = null;
-        }
-        return 0;
-      });
-    }, 1000);
-  }
-
-  useEffect(() => {
-    createInterval();
-    return () => {
-      if (intervalIdRef.current) {
-        clearInterval(intervalIdRef.current);
-        intervalIdRef.current = null;
-      }
-    };
-  }, []);
-
-  function clickHandler() {
-    setSecondsRemaining(INITIAL_TIMER_VALUE);
-    createInterval();
-    onClick();
-  }
-
-  return (
-    <Button
-      variant="link"
-      className="text-sm p-0 text-text-brand-secondary"
-      disabled={isIntervalActive}
-      onClick={clickHandler}
-    >
-      Clique aqui para reenviar {isIntervalActive && `(${secondsRemaining})`}
-    </Button>
-  );
-}
+import { IntervalButton } from "../../../../components/interval-button";
 
 function SignUpPageHeader({
   title,
@@ -140,6 +62,59 @@ function SignUpPageHeader({
   );
 }
 
+function Loading() {
+  return (
+    <div className="absolute top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]">
+      Loading...
+    </div>
+  );
+}
+
+function ClerkCaptcha() {
+  return (
+    <>
+      {/* Clerk's CAPTCHA widget */}
+      <div id="clerk-captcha" data-cl-language="pt-BR" />
+    </>
+  );
+}
+
+const ERROR_MESSAGES = {
+  LEGAL_ACCEPTANCE_REQUIRED:
+    "Para criar uma conta, você precisa ler e aceitar os Termos de Uso e a Política de Privacidade.",
+  FIRST_NAME_REQUIRED: "Por favor, insira seu nome",
+  LAST_NAME_REQUIRED: "Por favor, insira seu sobrenome",
+  INVALID_EMAIL: "Endereço de email inválido",
+  PASSWORD_LENGTH: "Sua senha deve ter 8 ou mais caracteres",
+  LEAKED_PASSWORD:
+    "Sua senha foi encontrada num vazamento de dados. Para sua segurança, por favor utilize outra senha.",
+  TOO_MANY_REQUESTS:
+    "Estamos recebendo muitas requisições. Por favor, tente novamente em alguns instantes.",
+  EMAIL_BEING_USED:
+    "Este email já está sendo usado. Por favor, tente com outro email.",
+  INCORRECT_VERIFICATION_CODE: "Código incorreto. Por favor, tente novamente.",
+};
+
+const termsAndPrivacySchema = z.boolean().refine((value) => value, {
+  error: ERROR_MESSAGES.LEGAL_ACCEPTANCE_REQUIRED,
+});
+
+const legalFormSchema = z.object({
+  termsAndPrivacy: termsAndPrivacySchema,
+});
+
+const signUpFormSchema = z.object({
+  firstName: z.string().min(1, { error: ERROR_MESSAGES.FIRST_NAME_REQUIRED }),
+  lastName: z.string().min(1, { error: ERROR_MESSAGES.LAST_NAME_REQUIRED }),
+  email: z.email({ error: ERROR_MESSAGES.INVALID_EMAIL }),
+  termsAndPrivacy: termsAndPrivacySchema,
+  password: z.string().min(8, { error: ERROR_MESSAGES.PASSWORD_LENGTH }),
+});
+
+const verifyCodeFormSchema = z.object({
+  code: z.string().min(6),
+});
+
 export function SignUpPageClient() {
   const { isLoaded, signUp, setActive } = useSignUp();
   const [verifying, setVerifying] = useState(false);
@@ -172,11 +147,6 @@ export function SignUpPageClient() {
     },
   });
 
-  if (!isLoaded) return <div>Loading...</div>;
-
-  const signUpStatus = signUp.status;
-  const missingFields = signUp.missingFields;
-
   async function onSubmitSignUp(data: z.infer<typeof signUpFormSchema>) {
     if (!isLoaded && !signUp) return null;
 
@@ -198,20 +168,17 @@ export function SignUpPageClient() {
       if (isClerkAPIResponseError(error)) {
         if (error.errors.some((x) => x.code === "form_password_pwned")) {
           signUpForm.setError("password", {
-            message:
-              "Sua senha foi encontrada num vazamento de dados. Para sua segurança, por favor utilize outra senha.",
+            message: ERROR_MESSAGES.LEAKED_PASSWORD,
           });
         } else if (error.errors.some((e) => e.code === "too_many_requests")) {
           signUpForm.setError("root", {
-            message:
-              "Estamos recebendo muitas requisições. Por favor, tente novamente em alguns instantes.",
+            message: ERROR_MESSAGES.TOO_MANY_REQUESTS,
           });
         } else if (
           error.errors.some((x) => x.code === "form_identifier_exists")
         ) {
           signUpForm.setError("root", {
-            message:
-              "Este email já está sendo usado. Por favor, tente com outro email.",
+            message: ERROR_MESSAGES.EMAIL_BEING_USED,
           });
         } else {
           console.error("Error:", JSON.stringify(error, null, 2));
@@ -255,12 +222,11 @@ export function SignUpPageClient() {
       if (isClerkAPIResponseError(error)) {
         if (error.errors.some((e) => e.code === "too_many_requests")) {
           verifyCodeForm.setError("root", {
-            message:
-              "Estamos recebendo muitas requisições. Por favor, tente novamente em alguns instantes.",
+            message: ERROR_MESSAGES.TOO_MANY_REQUESTS,
           });
         } else if (error.errors.some((e) => e.code === "form_code_incorrect")) {
           verifyCodeForm.setError("code", {
-            message: "Código incorreto. Por favor, tente novamente.",
+            message: ERROR_MESSAGES.INCORRECT_VERIFICATION_CODE,
           });
         } else {
           console.error("Error:", JSON.stringify(error, null, 2));
@@ -316,9 +282,11 @@ export function SignUpPageClient() {
     }
   }
 
+  if (!isLoaded) return <Loading />;
+
   if (
-    signUpStatus === "missing_requirements" &&
-    missingFields[0] === "legal_accepted"
+    signUp.status === "missing_requirements" &&
+    signUp.missingFields[0] === "legal_accepted"
   ) {
     return (
       <div className="flex flex-col gap-8 max-w-100 m-auto">
@@ -389,8 +357,7 @@ export function SignUpPageClient() {
               ></Controller>
 
               <div className="flex flex-col gap-4 -mt-4">
-                {/* Clerk's CAPTCHA widget */}
-                <div id="clerk-captcha" data-cl-language="pt-BR" />
+                <ClerkCaptcha />
                 <Field>
                   <Button
                     disabled={legalForm.formState.isSubmitting}
@@ -471,8 +438,7 @@ export function SignUpPageClient() {
               />
             </div>
             <div className="flex flex-col gap-4 w-full max-w-90 -mt-4">
-              {/* Clerk's CAPTCHA widget */}
-              <div id="clerk-captcha" data-cl-language="pt-BR" />
+              <ClerkCaptcha />
               <Field>
                 <Button
                   disabled={
@@ -490,7 +456,18 @@ export function SignUpPageClient() {
 
         <p className="text-center text-text-tertiaty text-sm">
           Não recebeu o email?{" "}
-          <ResendCodeButton onClick={resendVerificationCode} />
+          <IntervalButton
+            waitAmountInSecods={30}
+            onClick={resendVerificationCode}
+            render={(isIntervalActive, secondsRemaining) => {
+              return (
+                <>
+                  Clique aqui para reenviar{" "}
+                  {isIntervalActive && `(${secondsRemaining})`}
+                </>
+              );
+            }}
+          />
         </p>
       </div>
     );
@@ -651,8 +628,7 @@ export function SignUpPageClient() {
             ></Controller>
 
             <div className="flex flex-col gap-4 -mt-4">
-              {/* Clerk's CAPTCHA widget */}
-              <div id="clerk-captcha" data-cl-language="pt-BR" />
+              <ClerkCaptcha />
               <Field>
                 <Button
                   disabled={signUpForm.formState.isSubmitting}
