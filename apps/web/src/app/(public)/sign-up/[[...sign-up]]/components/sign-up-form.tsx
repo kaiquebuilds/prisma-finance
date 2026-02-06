@@ -6,9 +6,11 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import * as Sentry from "@sentry/nextjs";
 import { useSignUp } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import posthog from "posthog-js";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 import { handleClerkError } from "../lib/clerk-errors";
@@ -65,6 +67,10 @@ export function SignUpForm({ onSignUp }: SignUpFormProps) {
 
       await signUp.prepareEmailAddressVerification();
 
+      posthog.capture("sign_up_created", {
+        method: "email",
+      });
+
       onSignUp();
     } catch (error) {
       handleClerkError(error, signUpForm.setError);
@@ -74,6 +80,10 @@ export function SignUpForm({ onSignUp }: SignUpFormProps) {
   async function signUpWithGoogle() {
     if (!isLoaded || !signUp) return null;
 
+    posthog.capture("sign_up_created", {
+      method: "google",
+    });
+
     try {
       await signUp.authenticateWithRedirect({
         strategy: "oauth_google",
@@ -81,7 +91,9 @@ export function SignUpForm({ onSignUp }: SignUpFormProps) {
         redirectUrlComplete: "/",
       });
     } catch (error) {
-      console.error("Error:", JSON.stringify(error, null, 2));
+      Sentry.captureException(error, {
+        tags: { flow: "sign_up", method: "google" },
+      });
     }
   }
 

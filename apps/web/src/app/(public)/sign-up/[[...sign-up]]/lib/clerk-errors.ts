@@ -1,4 +1,6 @@
+import * as Sentry from "@sentry/nextjs";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
+import posthog from "posthog-js";
 import { FieldValues, Path, UseFormSetError } from "react-hook-form";
 import { ERROR_MESSAGES } from "./error-messages";
 
@@ -33,9 +35,21 @@ export function handleClerkError<T extends FieldValues>(
       setError(mapped.field as Path<T> | "root" | `root.${string}`, {
         message: mapped.message,
       });
+
+      posthog.capture("sign_up_error", {
+        error_code: clerkError.code,
+        error_field: mapped.field,
+      });
+
       return;
     }
   }
 
-  console.error("Unhandled Clerk error:", JSON.stringify(error, null, 2));
+  Sentry.captureException(error, {
+    tags: { flow: "sign_up" },
+  });
+
+  posthog.capture("sign_up_error", {
+    error_codes: error.errors.map((e) => e.code),
+  });
 }

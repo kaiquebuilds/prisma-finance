@@ -12,6 +12,7 @@ import { useSignUp } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { Mail } from "lucide-react";
+import posthog from "posthog-js";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 import { handleClerkError } from "../lib/clerk-errors";
@@ -48,6 +49,10 @@ export function VerifyEmailForm({ onBackClick }: VerifyEmailFormProps) {
         code: code,
       });
       if (signUpAttempt.status === "complete") {
+        posthog.capture("sign_up_completed", {
+          method: "email",
+        });
+
         await setActive({
           session: signUpAttempt.createdSessionId,
           redirectUrl: "/",
@@ -69,6 +74,8 @@ export function VerifyEmailForm({ onBackClick }: VerifyEmailFormProps) {
 
     try {
       await signUp.prepareEmailAddressVerification();
+
+      posthog.capture("sign_up_verification_resent");
     } catch (error) {
       handleClerkError(error, verifyCodeForm.setError);
     }

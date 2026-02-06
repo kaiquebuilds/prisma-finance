@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldGroup } from "@/components/ui/field";
 import { useSignUp } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
+import posthog from "posthog-js";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 import { handleClerkError } from "../lib/clerk-errors";
@@ -37,6 +38,8 @@ export function LegalForm() {
       });
 
       if (res.status === "complete") {
+        posthog.capture("sign_up_legal_accepted");
+
         await setActive({
           session: res.createdSessionId,
           redirectUrl: "/",
