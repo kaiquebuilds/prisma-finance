@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { SignUpPageClient } from "./sign-up-page-client";
+import { SignUpPageClient } from "./components/sign-up-page-client";
 
 export default async function SignUpPage() {
   const { isAuthenticated } = await auth();
