@@ -1,6 +1,8 @@
 "use client";
 
 import { useSignIn } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { SignInForm } from "./components/sign-in-form";
 
 function Loading() {
@@ -12,7 +14,16 @@ function Loading() {
 }
 
 export function SignInPageClient() {
-  const { isLoaded } = useSignIn();
+  const { isLoaded, signIn } = useSignIn();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoaded || !signIn) return;
+
+    if (signIn.status === "needs_new_password") {
+      router.replace("/reset-password");
+    }
+  }, [isLoaded, signIn, router]);
 
   if (!isLoaded) return <Loading />;
 

@@ -16,5 +16,6 @@ export const ERROR_MESSAGES = {
   INVALID_CREDENTIALS: "Email ou senha incorretos. Por favor, tente novamente.",
   SIGNED_UP_WITH_GOOGLE:
     "Esta conta usa login com Google. Clique em Continuar com Google para entrar.",
+  PASSWORD_COMPROMISED: `Sua senha pode estar comprometida. Por favor, clique em "Esqueceu sua senha?" para redefini-la`,
   PASSWORD_CONFIRMATION_MISMATCH: "As senhas não coincidem.",
 };

@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useSignIn } from "@clerk/nextjs";
+import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as Sentry from "@sentry/nextjs";
 import Link from "next/link";
@@ -57,6 +58,15 @@ export function SignInForm() {
         });
       }
     } catch (error) {
+      if (
+        isClerkAPIResponseError(error) &&
+        error.errors.some((e) => e.code === "form_password_compromised")
+      ) {
+        signInForm.setError("root", {
+          message: ERROR_MESSAGES.PASSWORD_COMPROMISED,
+        });
+        return;
+      }
       handleClerkError(error, signInForm.setError, "sign_in");
     }
   }

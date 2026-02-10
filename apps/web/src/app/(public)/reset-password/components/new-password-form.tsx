@@ -36,9 +36,13 @@ type NewPasswordSchemaType = z.infer<typeof newPasswordSchema>;
 
 interface NewPasswordFormProps {
   onSubmit: (createdSessionId: string) => void;
+  resumedFromSignIn?: boolean;
 }
 
-export function NewPasswordForm({ onSubmit }: NewPasswordFormProps) {
+export function NewPasswordForm({
+  onSubmit,
+  resumedFromSignIn,
+}: NewPasswordFormProps) {
   const { isLoaded, signIn } = useSignIn();
 
   const form = useForm<NewPasswordSchemaType>({
@@ -74,7 +78,16 @@ export function NewPasswordForm({ onSubmit }: NewPasswordFormProps) {
         <FieldGroup className="flex flex-col gap-8">
           <AuthPageHeader
             title="Escolha sua nova senha"
-            subtitle={<>Sua nova senha deve ter pelo menos 8 caracteres.</>}
+            subtitle={
+              resumedFromSignIn ? (
+                <>
+                  Você iniciou uma redefinição de senha anteriormente. Escolha
+                  sua nova senha para continuar.
+                </>
+              ) : (
+                <>Sua nova senha deve ter pelo menos 8 caracteres.</>
+              )
+            }
             icon={
               <FeaturedIcon>
                 <Key />
