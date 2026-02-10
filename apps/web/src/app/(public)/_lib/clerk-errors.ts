@@ -35,7 +35,7 @@ const CLERK_ERROR_MAP: Record<string, { field: string; message: string }> = {
   },
 };
 
-type AuthFlow = "sign_up" | "sign_in";
+type AuthFlow = "sign_up" | "sign_in" | "reset_password";
 
 export function handleClerkError<T extends FieldValues>(
   error: unknown,

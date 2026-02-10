@@ -125,7 +125,7 @@ export function SignInForm() {
                   <div className="flex items-center justify-between">
                     <FieldLabel htmlFor="password">Senha</FieldLabel>
                     <Link
-                      href="#"
+                      href="/reset-password"
                       className="text-sm text-text-tertiaty hover:underline"
                       tabIndex={-1}
                     >
