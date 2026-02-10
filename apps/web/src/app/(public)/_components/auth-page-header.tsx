@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { PrismaLogoMark } from "./prisma-logo";
 
-export function SignUpPageHeader({
+export function AuthPageHeader({
   title,
   subtitle,
   icon,

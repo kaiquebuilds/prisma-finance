@@ -5,10 +5,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import posthog from "posthog-js";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
-import { handleClerkError } from "../lib/clerk-errors";
-import { ERROR_MESSAGES } from "../lib/error-messages";
-import { ClerkCaptcha } from "./clerk-captcha";
-import { SignUpPageHeader } from "./sign-up-page-header";
+import { handleClerkError } from "../../../_lib/clerk-errors";
+import { ERROR_MESSAGES } from "../../../_lib/error-messages";
+import { ClerkCaptcha } from "../../../_components/clerk-captcha";
+import { AuthPageHeader } from "../../../_components/auth-page-header";
 import { TermsAndPrivacyCheckbox } from "./terms-and-privacy-checkbox";
 
 const termsAndPrivacySchema = z.boolean().refine((value) => value, {
@@ -54,7 +54,7 @@ export function LegalForm() {
     <div className="flex flex-col gap-8 max-w-100 m-auto">
       <form onSubmit={legalForm.handleSubmit(onSubmitLegalForm)} noValidate>
         <FieldGroup className="flex flex-col gap-8">
-          <SignUpPageHeader
+          <AuthPageHeader
             title="Bem-vindo(a) ao Prisma"
             subtitle={
               <>

@@ -15,9 +15,9 @@ import { Mail } from "lucide-react";
 import posthog from "posthog-js";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
-import { handleClerkError } from "../lib/clerk-errors";
-import { ClerkCaptcha } from "./clerk-captcha";
-import { SignUpPageHeader } from "./sign-up-page-header";
+import { handleClerkError } from "../../../_lib/clerk-errors";
+import { ClerkCaptcha } from "../../../_components/clerk-captcha";
+import { AuthPageHeader } from "../../../_components/auth-page-header";
 
 const verifyCodeFormSchema = z.object({
   code: z.string().min(6),
@@ -94,7 +94,7 @@ export function VerifyEmailForm({ onBackClick }: VerifyEmailFormProps) {
             </p>
           )}
           <div className="flex flex-col items-center gap-2 text-center">
-            <SignUpPageHeader
+            <AuthPageHeader
               title="Verifique seu email"
               subtitle={
                 <>

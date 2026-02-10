@@ -21,11 +21,26 @@ const CLERK_ERROR_MAP: Record<string, { field: string; message: string }> = {
     field: "code",
     message: ERROR_MESSAGES.INCORRECT_VERIFICATION_CODE,
   },
+  form_identifier_not_found: {
+    field: "root",
+    message: ERROR_MESSAGES.INVALID_CREDENTIALS,
+  },
+  form_password_incorrect: {
+    field: "root",
+    message: ERROR_MESSAGES.INVALID_CREDENTIALS,
+  },
+  strategy_for_user_invalid: {
+    field: "root",
+    message: ERROR_MESSAGES.SIGNED_UP_WITH_GOOGLE,
+  },
 };
+
+type AuthFlow = "sign_up" | "sign_in";
 
 export function handleClerkError<T extends FieldValues>(
   error: unknown,
   setError: UseFormSetError<T>,
+  flow: AuthFlow = "sign_up",
 ) {
   if (!isClerkAPIResponseError(error)) return;
 
@@ -36,7 +51,7 @@ export function handleClerkError<T extends FieldValues>(
         message: mapped.message,
       });
 
-      posthog.capture("sign_up_error", {
+      posthog.capture(`${flow}_error`, {
         error_code: clerkError.code,
         error_field: mapped.field,
       });
@@ -46,10 +61,10 @@ export function handleClerkError<T extends FieldValues>(
   }
 
   Sentry.captureException(error, {
-    tags: { flow: "sign_up" },
+    tags: { flow },
   });
 
-  posthog.capture("sign_up_error", {
+  posthog.capture(`${flow}_error`, {
     error_codes: error.errors.map((e) => e.code),
   });
 }
