@@ -1,3 +1,5 @@
+import { UserNotFound } from "@/components/user-not-found";
+import { fetchApiFromServer } from "@/lib/api/server";
 import {
   RedirectToSignIn,
   RedirectToTasks,
@@ -6,11 +8,23 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 
-export default function RootProtectedLayout({
+export default async function RootProtectedLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const res = await fetchApiFromServer("/v1/users/me");
+
+  if (!res.ok) {
+    return <UserNotFound statusCode={res.status} />;
+  }
+
+  const { data } = await res.json();
+
+  if (!data) {
+    return <UserNotFound statusCode={404} />;
+  }
+
   return (
     <>
       <SignedIn>
