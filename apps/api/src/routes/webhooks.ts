@@ -10,7 +10,8 @@ interface ClerkWebhookEvent {
   type: string;
   data: {
     id: string;
-    email_addresses: Array<{ email_address: string }>;
+    email_addresses: Array<{ id: string; email_address: string }>;
+    primary_email_address_id: string;
     first_name: string;
     last_name: string;
   };
@@ -32,10 +33,13 @@ export function createWebhookRouter(userRepo: UserRepository): Router {
         const {
           id: authProviderId,
           email_addresses,
+          primary_email_address_id,
           first_name,
           last_name,
         } = event.data;
-        const email = email_addresses[0]?.email_address;
+        const email = email_addresses.find(
+          (e) => e.id === primary_email_address_id,
+        )?.email_address;
         const name = `${first_name} ${last_name}`.trim();
 
         const user = await userRepo.findByAuthProviderId(authProviderId);
