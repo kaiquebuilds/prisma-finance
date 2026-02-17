@@ -3,12 +3,20 @@ import { Webhook } from "svix";
 import { prisma } from "@/lib/prisma";
 import { env } from "@/env";
 import logger from "@/lib/logger";
-import { clerkClient } from "@clerk/express";
 
 const router: Router = express.Router();
 const webhookSecret = env.CLERK_WEBHOOK_SECRET;
 
-// TODO: Update the user on other Clerk-issued events
+interface ClerkWebhookEvent {
+  type: string;
+  data: {
+    id: string;
+    email_addresses: Array<{ email_address: string }>;
+    first_name: string;
+    last_name: string;
+  };
+}
+
 router.post("/clerk", async (req: Request, res: Response) => {
   try {
     const payload = req.body;
@@ -16,20 +24,11 @@ router.post("/clerk", async (req: Request, res: Response) => {
 
     const wh = new Webhook(webhookSecret);
     const evt = wh.verify(payload, headers as Record<string, string>);
+    const event = evt as ClerkWebhookEvent;
 
-    const event = evt as {
-      type: string;
-      data: {
-        id: string;
-        email_addresses: Array<{ email_address: string }>;
-        first_name: string;
-        last_name: string;
-      };
-    };
-
-    if (event.type === "user.created") {
+    if (event.type === "user.updated") {
       const {
-        id: clerkId,
+        id: authProviderId,
         email_addresses,
         first_name,
         last_name,
@@ -37,51 +36,33 @@ router.post("/clerk", async (req: Request, res: Response) => {
       const email = email_addresses[0]?.email_address;
       const name = `${first_name} ${last_name}`.trim();
 
-      if (!email) {
-        return res.status(400).json({ error: "No email provided" });
-      }
-
-      const existingByClerkId = await prisma.user.findUnique({
-        where: { clerkId },
+      const user = await prisma.user.findUnique({
+        where: { authProviderId },
       });
 
-      if (existingByClerkId) {
-        await clerkClient.users.updateUser(clerkId, {
-          externalId: existingByClerkId.id,
-        });
-        return res.status(200).json({ success: true, user: existingByClerkId });
+      if (!user) {
+        return res.status(200).json({ skipped: true });
       }
 
-      const existingByEmail = await prisma.user.findUnique({
-        where: { email },
+      await prisma.user.update({
+        where: { authProviderId },
+        data: {
+          ...(email && { email }),
+          ...(name && { name }),
+        },
       });
 
-      let user;
-      if (existingByEmail) {
-        // Email collision: attach clerkId to existing user
-        user = await prisma.user.update({
-          where: { email },
-          data: { clerkId },
-        });
-      } else {
-        user = await prisma.user.create({
-          data: {
-            clerkId,
-            email,
-            name,
-            termsAcceptedVersion: env.CURRENT_TERMS_OF_SERVICE_VERSION,
-            privacyAcceptedVersion: env.CURRENT_PRIVACY_POLICY_VERSION,
-            termsAcceptedAt: new Date().toISOString(),
-            privacyAcceptedAt: new Date().toISOString(),
-          },
-        });
-      }
+      return res.status(200).json({ success: true });
+    }
 
-      await clerkClient.users.updateUser(clerkId, {
-        externalId: user.id,
+    if (event.type === "user.deleted") {
+      const { id: authProviderId } = event.data;
+
+      await prisma.user.delete({
+        where: { authProviderId },
       });
 
-      return res.status(200).json({ success: true, user });
+      return res.status(200).json({ success: true });
     }
 
     return res.status(200).json({ received: true });
