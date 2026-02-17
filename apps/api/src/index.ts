@@ -11,10 +11,12 @@ import logger from "./lib/logger";
 import * as Sentry from "@sentry/node";
 import helmet from "helmet";
 import { clerkMiddleware } from "@clerk/express";
-import webhookRouter from "./routes/webhooks";
+import { createWebhookRouter } from "./routes/webhooks";
+import { PrismaUserRepository } from "./repositories/prisma-user.repository";
 
 const port = env.PORT;
 const app = createApp();
+const userRepo = new PrismaUserRepository(prisma);
 
 const limiter = rateLimit({
   windowMs: 60 * 1000,
@@ -40,12 +42,16 @@ app.get("/health", (_req, res: Response) => {
   res.json({ message: "OK" });
 });
 
-app.use("/webhooks", express.raw({ type: "application/json" }), webhookRouter);
+app.use(
+  "/webhooks",
+  express.raw({ type: "application/json" }),
+  createWebhookRouter(userRepo),
+);
 
 app.use(clerkMiddleware());
 app.use(express.json());
 
-registerRoutes(app, prisma);
+registerRoutes(app, userRepo);
 
 Sentry.setupExpressErrorHandler(app);
 app.use(errorHandler);

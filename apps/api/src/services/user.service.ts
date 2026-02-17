@@ -1,4 +1,8 @@
-import { Prisma, PrismaClient, User } from "../generated/prisma/client";
+import {
+  EmailAlreadyExistsError,
+  User,
+  UserRepository,
+} from "../repositories/user.repository";
 import { env } from "@/env";
 import logger from "@/lib/logger";
 
@@ -9,43 +13,34 @@ export interface FindOrCreateUserParams {
 }
 
 export async function findOrCreateUser(
-  prisma: PrismaClient,
+  userRepo: UserRepository,
   params: FindOrCreateUserParams,
 ): Promise<User> {
   const { authProviderId, email, name } = params;
 
+  const existing = await userRepo.findByAuthProviderId(authProviderId);
+  if (existing) {
+    return existing;
+  }
+
   try {
-    return await prisma.user.upsert({
-      where: { authProviderId },
-      update: {},
-      create: {
-        authProviderId,
-        email,
-        name,
-        termsAcceptedVersion: env.CURRENT_TERMS_OF_SERVICE_VERSION,
-        privacyAcceptedVersion: env.CURRENT_PRIVACY_POLICY_VERSION,
-        termsAcceptedAt: new Date(),
-        privacyAcceptedAt: new Date(),
-      },
+    return await userRepo.create({
+      authProviderId,
+      email,
+      name,
+      termsAcceptedVersion: env.CURRENT_TERMS_OF_SERVICE_VERSION,
+      privacyAcceptedVersion: env.CURRENT_PRIVACY_POLICY_VERSION,
+      termsAcceptedAt: new Date(),
+      privacyAcceptedAt: new Date(),
     });
   } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
-      const target = (error.meta?.target as string[]) ?? [];
+    if (error instanceof EmailAlreadyExistsError) {
+      logger.warn("Email collision during user creation", {
+        authProviderId,
+        email,
+      });
 
-      if (target.includes("email")) {
-        logger.warn("Email collision during user creation", {
-          authProviderId,
-          email,
-        });
-
-        return await prisma.user.update({
-          where: { email },
-          data: { authProviderId },
-        });
-      }
+      return await userRepo.updateByEmail(email, { authProviderId });
     }
 
     throw error;

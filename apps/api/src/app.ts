@@ -1,8 +1,8 @@
 import express, { Response, Request, Express } from "express";
-import { PrismaClient } from "./generated/prisma/client";
 import { protectedRoute } from "./middleware/protectedRoute";
 import { clerkClient, getAuth } from "@clerk/express";
 import { findOrCreateUser } from "./services/user.service";
+import { UserRepository } from "./repositories/user.repository";
 import logger from "./lib/logger";
 
 export function createApp(): Express {
@@ -10,7 +10,7 @@ export function createApp(): Express {
   return app;
 }
 
-export function registerRoutes(app: Express, prisma: PrismaClient): void {
+export function registerRoutes(app: Express, userRepo: UserRepository): void {
   const v1 = express.Router();
 
   v1.get("/users/me", async (req: Request, res: Response) => {
@@ -19,9 +19,7 @@ export function registerRoutes(app: Express, prisma: PrismaClient): void {
 
     // Fast path: prismaUserId already in session claims
     if (prismaUserId) {
-      const user = await prisma.user.findUnique({
-        where: { id: prismaUserId },
-      });
+      const user = await userRepo.findById(prismaUserId);
 
       if (user) {
         return res.json({ data: user });
@@ -45,7 +43,7 @@ export function registerRoutes(app: Express, prisma: PrismaClient): void {
     }
 
     try {
-      const user = await findOrCreateUser(prisma, {
+      const user = await findOrCreateUser(userRepo, {
         authProviderId,
         email,
         name,
