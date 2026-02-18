@@ -1,20 +1,22 @@
-import "./instrument";
-import { env } from "./env";
-import { createApp, registerRoutes } from "./app";
-import { prisma } from "./lib/prisma";
+import { clerkMiddleware } from "@clerk/express";
+import * as Sentry from "@sentry/node";
 import cors from "cors";
 import express, { Response } from "express";
 import rateLimit from "express-rate-limit";
+import helmet from "helmet";
+import { createApp, registerRoutes } from "./app";
+import { env } from "./env";
+import "./instrument";
+import logger from "./lib/logger";
+import { prisma } from "./lib/prisma";
 import { errorHandler } from "./middleware/errorHandler";
 import { morganMiddleware } from "./middleware/morgan";
-import logger from "./lib/logger";
-import * as Sentry from "@sentry/node";
-import helmet from "helmet";
-import { clerkMiddleware } from "@clerk/express";
-import webhookRouter from "./routes/webhooks";
+import { PrismaUserRepository } from "./repositories/prisma-user.repository";
+import { createWebhookRouter } from "./routes/webhooks";
 
 const port = env.PORT;
 const app = createApp();
+const userRepo = new PrismaUserRepository(prisma);
 
 const limiter = rateLimit({
   windowMs: 60 * 1000,
@@ -25,6 +27,7 @@ const limiter = rateLimit({
     "We're receiving a lot of requests right now. Please try again in a few seconds.",
 });
 
+app.set("trust proxy", true);
 app.use(limiter);
 app.use(
   cors({
@@ -39,12 +42,20 @@ app.get("/health", (_req, res: Response) => {
   res.json({ message: "OK" });
 });
 
-app.use("/webhooks", express.raw({ type: "application/json" }), webhookRouter);
+app.use(
+  "/webhooks",
+  express.raw({ type: "application/json" }),
+  createWebhookRouter(userRepo),
+);
 
-app.use(clerkMiddleware());
+app.use(
+  clerkMiddleware({
+    audience: env.CLERK_JWT_AUDIENCE,
+  }),
+);
 app.use(express.json());
 
-registerRoutes(app, prisma);
+registerRoutes(app, userRepo);
 
 Sentry.setupExpressErrorHandler(app);
 app.use(errorHandler);

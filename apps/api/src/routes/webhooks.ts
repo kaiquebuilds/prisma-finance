@@ -1,94 +1,75 @@
 import express, { Request, Response, Router } from "express";
 import { Webhook } from "svix";
-import { prisma } from "@/lib/prisma";
 import { env } from "@/env";
 import logger from "@/lib/logger";
-import { clerkClient } from "@clerk/express";
+import { UserRepository } from "../repositories/user.repository";
 
-const router: Router = express.Router();
 const webhookSecret = env.CLERK_WEBHOOK_SECRET;
 
-// TODO: Update the user on other Clerk-issued events
-router.post("/clerk", async (req: Request, res: Response) => {
-  try {
-    const payload = req.body;
-    const headers = req.headers as Record<string, string | string[]>;
+interface ClerkWebhookEvent {
+  type: string;
+  data: {
+    id: string;
+    email_addresses: Array<{ id: string; email_address: string }>;
+    primary_email_address_id: string;
+    first_name: string;
+    last_name: string;
+  };
+}
 
-    const wh = new Webhook(webhookSecret);
-    const evt = wh.verify(payload, headers as Record<string, string>);
+export function createWebhookRouter(userRepo: UserRepository): Router {
+  const router: Router = express.Router();
 
-    const event = evt as {
-      type: string;
-      data: {
-        id: string;
-        email_addresses: Array<{ email_address: string }>;
-        first_name: string;
-        last_name: string;
-      };
-    };
+  router.post("/clerk", async (req: Request, res: Response) => {
+    try {
+      const payload = req.body;
+      const headers = req.headers as Record<string, string | string[]>;
 
-    if (event.type === "user.created") {
-      const {
-        id: clerkId,
-        email_addresses,
-        first_name,
-        last_name,
-      } = event.data;
-      const email = email_addresses[0]?.email_address;
-      const name = `${first_name} ${last_name}`.trim();
+      const wh = new Webhook(webhookSecret);
+      const evt = wh.verify(payload, headers as Record<string, string>);
+      const event = evt as ClerkWebhookEvent;
 
-      if (!email) {
-        return res.status(400).json({ error: "No email provided" });
+      if (event.type === "user.updated") {
+        const {
+          id: authProviderId,
+          email_addresses,
+          primary_email_address_id,
+          first_name,
+          last_name,
+        } = event.data;
+        const email = email_addresses.find(
+          (e) => e.id === primary_email_address_id,
+        )?.email_address;
+        const name = `${first_name} ${last_name}`.trim();
+
+        const user = await userRepo.findByAuthProviderId(authProviderId);
+
+        if (!user) {
+          return res.status(200).json({ skipped: true });
+        }
+
+        await userRepo.update(authProviderId, {
+          ...(email && { email }),
+          ...(name && { name }),
+        });
+
+        return res.status(200).json({ success: true });
       }
 
-      const existingByClerkId = await prisma.user.findUnique({
-        where: { clerkId },
-      });
+      if (event.type === "user.deleted") {
+        const { id: authProviderId } = event.data;
 
-      if (existingByClerkId) {
-        await clerkClient.users.updateUser(clerkId, {
-          externalId: existingByClerkId.id,
-        });
-        return res.status(200).json({ success: true, user: existingByClerkId });
+        await userRepo.delete(authProviderId);
+
+        return res.status(200).json({ success: true });
       }
 
-      const existingByEmail = await prisma.user.findUnique({
-        where: { email },
-      });
-
-      let user;
-      if (existingByEmail) {
-        // Email collision: attach clerkId to existing user
-        user = await prisma.user.update({
-          where: { email },
-          data: { clerkId },
-        });
-      } else {
-        user = await prisma.user.create({
-          data: {
-            clerkId,
-            email,
-            name,
-            termsAcceptedVersion: env.CURRENT_TERMS_OF_SERVICE_VERSION,
-            privacyAcceptedVersion: env.CURRENT_PRIVACY_POLICY_VERSION,
-            termsAcceptedAt: new Date().toISOString(),
-            privacyAcceptedAt: new Date().toISOString(),
-          },
-        });
-      }
-
-      await clerkClient.users.updateUser(clerkId, {
-        externalId: user.id,
-      });
-
-      return res.status(200).json({ success: true, user });
+      return res.status(200).json({ received: true });
+    } catch (error) {
+      logger.error("Webhook error:", error);
+      return res.status(400).json({ error: "Webhook verification failed" });
     }
+  });
 
-    return res.status(200).json({ received: true });
-  } catch (error) {
-    logger.error("Webhook error:", error);
-    return res.status(400).json({ error: "Webhook verification failed" });
-  }
-});
-
-export default router;
+  return router;
+}
