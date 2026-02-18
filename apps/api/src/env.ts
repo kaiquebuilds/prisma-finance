@@ -2,7 +2,11 @@
 import dotenv from "dotenv";
 import { z } from "zod";
 
+const isProduction = process.env.NODE_ENV === "production";
+const isTest = process.env.NODE_ENV === "test";
+
 const dotenvResult = dotenv.config({
+  path: isTest ? ".env.test" : ".env",
   quiet: true,
 });
 
@@ -23,11 +27,7 @@ const envSchema = z.object({
   CURRENT_PRIVACY_POLICY_VERSION: z.string(),
 });
 
-const isDocker = process.env.DOCKER === "true";
-const isProduction = process.env.NODE_ENV === "production";
-const isTest = process.env.NODE_ENV === "test";
-
-if (!isDocker && !isProduction && !isTest) {
+if (!isProduction) {
   if (dotenvResult.error) {
     throw new Error(
       `Missing or invalid .env file: ${dotenvResult.error.message}`,
