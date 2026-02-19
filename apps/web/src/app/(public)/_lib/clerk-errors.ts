@@ -1,5 +1,5 @@
-import * as Sentry from "@sentry/nextjs";
 import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
+import * as Sentry from "@sentry/nextjs";
 import posthog from "posthog-js";
 import { FieldValues, Path, UseFormSetError } from "react-hook-form";
 import { ERROR_MESSAGES } from "./error-messages";
@@ -7,7 +7,7 @@ import { ERROR_MESSAGES } from "./error-messages";
 const CLERK_ERROR_MAP: Record<string, { field: string; message: string }> = {
   form_password_pwned: {
     field: "password",
-    message: ERROR_MESSAGES.LEAKED_PASSWORD,
+    message: ERROR_MESSAGES.PWD_FOUND_IN_BREACH,
   },
   too_many_requests: {
     field: "root",

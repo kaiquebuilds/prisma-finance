@@ -6,7 +6,7 @@ export const ERROR_MESSAGES = {
   INVALID_EMAIL: "Endereço de email inválido",
   PASSWORD_LENGTH: "Sua senha deve ter 8 ou mais caracteres",
   PASSWORD_REQUIRED: "Por favor, insira sua senha",
-  LEAKED_PASSWORD:
+  PWD_FOUND_IN_BREACH:
     "Sua senha foi encontrada num vazamento de dados. Para sua segurança, por favor utilize outra senha.",
   TOO_MANY_REQUESTS:
     "Estamos recebendo muitas requisições. Por favor, tente novamente em alguns instantes.",
