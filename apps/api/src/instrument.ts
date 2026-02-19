@@ -9,4 +9,6 @@ Sentry.init({
   profileSessionSampleRate: 1.0,
   profileLifecycle: "trace",
   sendDefaultPii: true,
+  enabled: process.env.API_ENV !== "development",
+  environment: process.env.API_ENV ?? process.env.NODE_ENV,
 });
