@@ -1,0 +1,2 @@
+ignored-paths:
+  - apps/web/src/app/(public)/_lib/error-messages.ts
