@@ -1,170 +1,108 @@
-# Prisma Finance — Project Guidelines
+# Prisma Finance - Project Guidelines
 
-## Project Overview
+## The Product
 
-Prisma is a personal finance web app for Brazilian users, centered on a "safe-to-spend" calculation. The core question it answers: _"Can I buy this today without ruining my month?"_
+Prisma is a personal finance management app built for brazilian users. Its core value proposition is to increase clarity, reducing financial stress and enabling better decision-making - an unfortunate reality for the majority of the brazilian population.
 
-Target users are **Alex (The Planner)** and **Juliana (The Overwhelmed)** — see `docs/product/personas.md`. All UI copy is in **Portuguese (pt-BR)**.
+The main personas are Alex and Juliana, you can read more about them in the [personas doc](/docs/product/personas).
+
+Our goals are in the [product strategy doc](/docs/product/strategy.md) and [north stars doc](/docs/product/north-star.md), but in summary we want to:
+
+- Provide a clear and intuitive interface.
+- Offer actionable insights and recommendations based on users' financial data.
+- Ensure top-notch security and privacy for our users' financial information.
+- Continuously iterate and improve based on user feedback and data.
 
 ## Architecture
 
-Nx monorepo:
+Our architecture is a monorepo managed with Nx, containing multiple apps and shared packages. The main components are:
 
-- `apps/web` — Next.js (App Router), deployed on Vercel
-- `apps/api` — Node.js + Express, deployed on Render
-- `packages/core` — shared business logic (e.g. safe-to-spend calculation, financial utils)
+- `apps/web`: The main Next.js frontend application.
+- `apps/api`: The Express backend API.
+- `apps/marketing`: A Next.js marketing site.
+- `apps/web-e2e`: Playwright end-to-end tests.
+- `packages/core`: A shared package for core business logic and utilities, with no app dependencies.
 
-Key services:
+Tech stack rationale can be found in the [tech stack ADR](/docs/architecture/adr/001-tech-stack.md).
 
-- **Auth:** Clerk (`@clerk/nextjs`). API verifies Bearer tokens via JWKS.
-- **Database:** PostgreSQL on Neon via Prisma ORM. Users table keyed by Clerk subject.
-- **Error tracking:** Sentry (`@sentry/nextjs` + backend SDK)
-- **Analytics:** PostHog (`posthog-js`)
+Every meaningful architectural decision is documented in an ADR (Architecture Decision Record) in the [ADRs directory](/docs/architecture/adr/).
 
-ADRs in `docs/architecture/adr/` explain every major decision. Read the relevant ADR before proposing changes to auth, infrastructure, or observability.
+## Web App (`apps/web`)
 
-## Running Tasks
+**Next.js 16 App Router** with TypeScript. Key directories under `src/`:
 
-**Always ask before running any `nx` command** (build, lint, test, e2e). Do not run them autonomously.
+- `app/(public)/` — Unauthenticated pages
+- `app/(protected)/` — Authenticated pages
+- `app/api/` — Route handlers (health check, PostHog proxy)
+- `components/ui/` — Shadcn-style UI primitives
+- `hooks/` — Custom React hooks
+- `icons/` — SVG icons (imported as React components via @svgr/webpack)
+- `lib/` — Utilities
 
-When you do run tasks, use `nx`:
+## API App (`apps/api`)
 
+**Express 5** with Prisma ORM and PostgreSQL. Structure:
+
+- `src/routes/` — Route handlers
+- `src/services/` — Business logic
+- `src/repositories/` — Prisma data access layer
+- `src/middleware/` — Express middleware (Clerk auth, rate limiting, etc.)
+- `src/lib/` — Utilities (logger, etc.)
+- `src/instrument.ts` — Sentry instrumentation (loaded before app)
+- `src/env.ts` — Typed environment variables
+- `prisma/schema.prisma` — Database schema
+- `prisma/migrations/` — Migration history
+
+Database: PostgreSQL 17 via Docker (`docker compose up -d`).
+
+## Key Patterns
+
+**Forms**: `react-hook-form` + `zod` (v4) + `@hookform/resolvers/zod`.
+
+**Styling**: Tailwind CSS v4, `class-variance-authority` for variants, `clsx` + `tailwind-merge` for conditional classes.
+
+**Testing**: Vitest for unit tests (jsdom for web, node for api). Web vitest config uses `passWithNoTests: true`.
+
+**Language**: All UI text is in **Portuguese (pt-BR)**.
+
+**Observability**: PostHog for analytics, Sentry for error tracking — both are instrumented in auth flows and globally via Next.js/Express integrations.
+
+## Commands
+
+All commands are run via Nx. Use `pnpm` as the package manager.
+
+```bash
+# Run dev servers
+pnpm nx run web:dev
+pnpm nx run api:dev
+
+# Build
+pnpm nx run web:build
+pnpm nx run api:build
+
+# Test (single project)
+pnpm nx run web:test
+pnpm nx run api:test
+pnpm nx run core:test
+
+# Run a single test file
+pnpm nx run web:test -- --reporter=verbose <path/to/file.test.ts>
+
+# Lint
+pnpm nx run web:lint
+pnpm nx run api:lint
+
+# Typecheck
+pnpm nx run web:typecheck
+pnpm nx run api:typecheck
+
+# Run affected targets (CI-style)
+pnpm nx affected -t typecheck
+pnpm nx affected -t lint
+pnpm nx affected -t test
+
+# Database (from apps/api/)
+pnpm --filter api db:generate       # Regenerate Prisma client
+pnpm --filter api db:migrate:dev    # Run dev migrations
+pnpm --filter api db:studio         # Open Prisma Studio
 ```
-npx nx run web:build
-npx nx run-many -t lint
-npx nx affected -t test
-```
-
-## Sensitive Areas — Be Conservative
-
-Apply extra scrutiny and ask before making changes in these areas:
-
-1. **Financial calculations** — Any logic involving amounts, balances, installments, or safe-to-spend math. Correctness is non-negotiable. Prefer `decimal.js` or integer arithmetic over floating-point.
-2. **Auth & security** — Clerk flows, JWT/JWKS handling, API authorization middleware, LGPD compliance (data minimization, user rights, 6-month inactive deletion).
-3. **Database schema & migrations** — Prisma schema changes are hard to reverse. Always think about data migration and backward compatibility before touching `schema.prisma`.
-4. **API contracts** — Breaking changes to request/response shapes affect both `apps/web` and `apps/api`. Coordinate changes across both apps.
-
-## Git Workflow
-
-- **Always ask before committing.** Propose the commit message and wait for explicit approval.
-- **Never push** unless explicitly asked.
-- Use **Conventional Commits**: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`, `test:`, `perf:`.
-- Scope to the affected app/package when relevant: `feat(web):`, `fix(api):`.
-
-## Code Conventions
-
-### General
-
-- **TypeScript strictly** — no `any`, no `as` casts unless truly necessary with a comment explaining why.
-- **No barrel/index re-export files** — import from the specific file, not from a folder index.
-- **Zod schemas co-located** with the component or route that uses them (not in a global `schemas/` folder).
-
-### Next.js (`apps/web`)
-
-- **Server Components by default.** Add `"use client"` only when the component genuinely needs browser APIs, event handlers, or React hooks.
-- Auth check + redirect lives in the server `page.tsx`; the client component handles the form.
-- Public routes live under `app/(public)/`. Shared auth UI components are in `(public)/_components/`, shared auth logic in `(public)/_lib/`.
-
-### Error Handling
-
-- Use `handleClerkError<T>(error, setError, flow)` for all Clerk errors — it instruments PostHog + Sentry automatically.
-- Use identical error messages for `identifier_not_found` and `password_incorrect` to prevent user enumeration.
-
-# Context7 MCP
-
-Always use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps without me having to explicitly ask.
-
-<!-- nx configuration start-->
-
-# General Guidelines for working with Nx
-
-- When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
-- You have access to the Nx MCP server and its tools, use them to help the user
-- When answering questions about the repository, use the `nx_workspace` tool first to gain an understanding of the workspace architecture where applicable.
-- When working in individual projects, use the `nx_project_details` mcp tool to analyze and understand the specific project structure and dependencies
-- For questions around nx configuration, best practices or if you're unsure, use the `nx_docs` tool to get relevant, up-to-date docs. Always use this instead of assuming things about nx configuration
-- If the user needs help with an Nx configuration or project graph error, use the `nx_workspace` tool to get any errors
-
-<!-- nx configuration end-->
-
----
-
-description: Core architecture principles
-globs: []
-alwaysApply: true
-
----
-
-# Fakeflix Architecture Principles
-
-**Structure:**
-
-- Apps = Bootstraps (orchestration only)
-- Packages = Business logic
-- Modules = Independent, composable domains
-
-**Module Structure:**
-
-- package/module/core/services/ (Business logic)
-- package/module/http/ (HTTP endpoints, external clients and DTOs)
-- package/module/persistence/ (TypeORM entities/repos)
-
-**10 Key Principles:**
-
-1. Well-defined boundaries | 2. Composability | 3. Independence | 4. Individual scale | 5. Explicit communication
-2. Replaceability | 7. Deployment independence | 8. State isolation ⚠️ | 9. Observability | 10. Fail independence
-
----
-
-## 📚 Progressive Documentation Loading
-
-**CRITICAL**: Only load documents relevant to your current task. Do NOT load all documentation at once (saves ~51k tokens).
-
-### Decision Tree: What to Read (Priority Order)
-
-**Start here for navigation:**
-
-- **Understanding overall architecture or starting new work** → `docs/ARCHITECTURE-OVERVIEW.md` (navigation hub, ~12KB)
-
-**Database & Entities (CRITICAL - most violated):**
-
-- **Creating/modifying entities, migrations, or TypeORM** → `docs/STATE-ISOLATION.md` ⚠️ (~16KB)
-  - Always check for duplicate entity names before creating entities
-  - Required before any database work
-
-**Implementation Patterns:**
-
-- **Creating controllers, services, or repositories** → `docs/CODING-PATTERNS.md` (~28KB)
-  - Repository pattern, lean controllers, transaction management
-- **Organizing code within a package** → See `docs/IMPLEMENTATION-CHECKLIST.md` (File Organization section)
-
-**Module Design & Communication:**
-
-- **Creating new modules, boundaries, or inter-module communication** → `docs/MODULAR-PRINCIPLES.md` (~20KB)
-  - Principles 1-7: boundaries, composability, independence, communication
-
-**Resilience & Observability:**
-
-- **Logging, metrics, error handling, circuit breakers** → `docs/RESILIENCE-OBSERVABILITY.md` (~20KB)
-  - Principles 9-10: observability, fail independence
-
-**External Integrations:**
-
-- **Integrating external APIs, third-party services, HTTP clients** → `docs/THIRD-PARTY-INTEGRATION.md` (~16KB)
-  - Mock/HTTP/SDK patterns, client encapsulation, injection patterns
-
-**Verification & Compliance:**
-
-- **Pre-commit checks, architecture verification, detection commands** → `docs/IMPLEMENTATION-CHECKLIST.md` (~20KB)
-  - Detection commands, verification steps, anti-patterns
-
-### Quick Reference by Task Type
-
-| Task Type                 | Primary Doc                                | Secondary Docs              |
-| ------------------------- | ------------------------------------------ | --------------------------- |
-| New entity/migration      | STATE-ISOLATION.md                         | ARCHITECTURE-OVERVIEW.md    |
-| New controller/service    | CODING-PATTERNS.md                         | IMPLEMENTATION-CHECKLIST.md |
-| New module                | MODULAR-PRINCIPLES.md + STATE-ISOLATION.md | ARCHITECTURE-OVERVIEW.md    |
-| External API integration  | THIRD-PARTY-INTEGRATION.md                 | RESILIENCE-OBSERVABILITY.md |
-| Error handling/logging    | RESILIENCE-OBSERVABILITY.md                | CODING-PATTERNS.md          |
-| Architecture verification | IMPLEMENTATION-CHECKLIST.md                | (run detection commands)    |
