@@ -9,6 +9,6 @@ Sentry.init({
   tracesSampleRate: 1.0,
   profileSessionSampleRate: 1.0,
   profileLifecycle: "trace",
-  enabled: env.NODE_ENV === "production",
-  environment: env.API_ENV ?? "production",
+  enabled: env.API_ENV !== "development",
+  environment: env.API_ENV ?? process.env.NODE_ENV,
 });
