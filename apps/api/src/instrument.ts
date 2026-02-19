@@ -1,14 +1,14 @@
+import { env } from "@/env";
 import * as Sentry from "@sentry/node";
 import { nodeProfilingIntegration } from "@sentry/profiling-node";
 
 Sentry.init({
-  dsn: "https://0a903f7f299c0c8cda7f8ac90c31a1d3@o4510754313076736.ingest.us.sentry.io/4510754314715136",
+  dsn: env.SENTRY_DSN,
   integrations: [nodeProfilingIntegration()],
   enableLogs: true,
   tracesSampleRate: 1.0,
   profileSessionSampleRate: 1.0,
   profileLifecycle: "trace",
-  sendDefaultPii: true,
-  enabled: process.env.API_ENV !== "development",
-  environment: process.env.API_ENV ?? process.env.NODE_ENV,
+  enabled: env.API_ENV !== "development",
+  environment: env.API_ENV ?? process.env.NODE_ENV,
 });
